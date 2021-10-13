@@ -71,3 +71,11 @@ Thumbs.db
 *.dll
 *.exe
 
+# zip file
+*.zip
+
+# build folder
+build-linux/
+.cache/
+.vscode/
+tmp/

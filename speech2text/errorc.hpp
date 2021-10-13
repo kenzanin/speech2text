@@ -6,8 +6,10 @@
 namespace ERRORCODE {
 class ErrorCode {
  public:
-  const std::unordered_map<int, const char*> errorc{
-      {1000, "Error %d: File %s not Exist\n"}};
+  std::unordered_map<int, const char*> const errorc{
+      {1000, "Error %d: File %s does not exist\n"},
+      {1001, "Error %d: Directory %s does not exist\n"}
 };
 
+};
 }  // namespace ERRORCODE
