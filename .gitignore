@@ -79,3 +79,4 @@ build-linux/
 .cache/
 .vscode/
 tmp/
+compile_commands.json
