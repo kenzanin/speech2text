@@ -15,6 +15,7 @@ class Config : ERRORCODE::ErrorCode {
  public:
   std::string fileName{};
   std::string wavLoc[2]{};
+  std::string wavPrefix{};
 
   Config(const std::string);
 };
