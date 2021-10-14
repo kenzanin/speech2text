@@ -80,3 +80,4 @@ build-linux/
 .vscode/
 tmp/
 compile_commands.json
+wav/

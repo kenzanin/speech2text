@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <utility>
 #include <variant>
@@ -13,31 +15,29 @@
 #include "inipp/inipp.h"
 
 namespace CONFIG {
-using std::make_pair;
-
-class Config : ERRORCODE::ErrorCode {
+class Config : public ERRORCODE::ErrorCode {
  private:
   inipp::Ini<char> ini{};
 
   //! register config ini to variable
   const std::map<std::pair<std::string, std::string> const, std::string *const>
       ini_map = {
-          {make_pair("location", "source"), &this->wavLoc},
-          {make_pair("file", "ext"), &this->wavExt},
-          {make_pair("file", "ch1_suffix"), &this->wavSuffix[0]},
-          {make_pair("file", "ch2_suffix"), &this->wavSuffix[1]},
-          {make_pair("libtorch", "loader"), &this->loader},
-          {make_pair("libtorch", "encoder"), &this->encoder},
-          {make_pair("libtorch", "decoder"), &this->decoder},
+          {std::make_pair("location", "source"), &this->wavLoc},
+          {std::make_pair("file", "ext"), &this->wavExt},
+          {std::make_pair("file", "ch1_suffix"), &this->wavSuffix[0]},
+          {std::make_pair("file", "ch2_suffix"), &this->wavSuffix[1]},
+          {std::make_pair("libtorch", "loader"), &this->loader},
+          {std::make_pair("libtorch", "encoder"), &this->encoder},
+          {std::make_pair("libtorch", "decoder"), &this->decoder},
       };
 
   //! @brief check if file exist and trow exception when doesn't
   //! @param std::string file name
   //! @param int error code
   //! @return bool true if exist
-  bool if_file_exist(std::string, int);
-
-  bool validate();
+  bool IfFileExist(std::string, int);
+  void WavFind();
+  bool Validate();
 
  public:
   //! config file name
@@ -57,11 +57,25 @@ class Config : ERRORCODE::ErrorCode {
   //! list of wav in wavLoc
   std::vector<std::string> wavFiles{};
 
-  Config(const std::string);
-  void WavFind();
+  void ReadConfig(const std::string);
+
+  Config &operator=(const Config &t_config) {
+    fileName = t_config.fileName;
+    wavExt = t_config.wavExt;
+    wavLoc = t_config.wavLoc;
+    std::copy(t_config.wavSuffix->begin(), t_config.wavSuffix->end(),
+              wavSuffix);
+    loader = t_config.loader;
+    encoder = t_config.encoder;
+    decoder = t_config.decoder;
+    wavFiles = t_config.wavFiles;
+    return *this;
+  }
+  Config(const Config &t_other) {}
+  Config() {}
 };
 
-inline bool Config::if_file_exist(std::string name, int e) {
+inline bool Config::IfFileExist(std::string name, int e) {
   try {
     if (!std::filesystem::exists(name)) throw e;
   } catch (int &e) {
@@ -71,7 +85,7 @@ inline bool Config::if_file_exist(std::string name, int e) {
   return true;
 }
 
-inline bool Config::validate() {
+inline bool Config::Validate() {
   //! does the path exist?
   try {
     if (!std::filesystem::is_directory(wavLoc)) throw 1001;
@@ -81,13 +95,13 @@ inline bool Config::validate() {
   }
 
   //! does loader.zip exist
-  if_file_exist(loader, 1000);
+  IfFileExist(loader, 1000);
 
   //! does encoder.zip exist
-  if_file_exist(encoder, 1000);
+  IfFileExist(encoder, 1000);
 
   //! does decoder.zip exist
-  if_file_exist(decoder, 1000);
+  IfFileExist(decoder, 1000);
 
   return true;
 }
@@ -96,26 +110,22 @@ inline void Config::WavFind() {
   for (const auto &i : std::filesystem::directory_iterator(wavLoc)) {
     //! check if file name ended with .wav == wavExt
     std::string tmp = i.path().c_str();
-    int ii = 0;
-    for (; ii < wavExt.size(); ii++) {
-      char x=wavExt[wavExt.size() - ii -1];
-      char y=tmp[tmp.size() - ii - 1];
-      if (x != y) {
-        break;
-      }
+    int test_string =
+        wavExt.compare(std::string(tmp.end() - wavExt.size(), tmp.end()));
+    //! if not jump to for
+    if (test_string != 0) {
+      continue;
     }
-    
-    //! if not back to for
-    if (ii < wavExt.size()) continue;
 
     wavFiles.push_back(i.path());
-    std::printf("file: %s\n", i.path().c_str());
+    // std::printf("file: %s\n", i.path().c_str());
   }
 }
 
-inline Config::Config(const std::string n) : fileName(n) {
+inline void Config::ReadConfig(const std::string n) {
+  fileName = n;
   //! check if file exist
-  if_file_exist(fileName, 1000);
+  IfFileExist(fileName, 1000);
 
   //! parse ini config file
   std::ifstream is(fileName);
@@ -127,7 +137,7 @@ inline Config::Config(const std::string n) : fileName(n) {
     inipp::get_value(ini.sections[e.first.first], e.first.second, *(e.second));
   }
 
-  validate();
+  Validate();
   WavFind();
 }
 }  // namespace CONFIG
