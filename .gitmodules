@@ -1,0 +1,6 @@
+[submodule "speech2text/inipp"]
+	path = speech2text/inipp
+	url = https://github.com/mcmtroffaes/inipp
+[submodule "speech2text/audio"]
+	path = speech2text/audio
+	url = https://github.com/pytorch/audio
