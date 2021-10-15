@@ -11,6 +11,7 @@ set(CMAKE_CXX_CPPCHECK "cppcheck")
 set(CMAKE_CXX_CPPLINT "cpplint")
 
 add_subdirectory("speech2text")
+
 include_directories("speech2text")
 include_directories("speech2text/inipp")
 add_executable(test01 main.cpp)
