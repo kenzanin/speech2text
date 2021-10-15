@@ -21,15 +21,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(BUILD_SOX
     ON
-    CACHE BOOL "Build libsox into libtorchaudio" FORCE)
+    CACHE BOOL "" FORCE)
 
 set(BUILD_KALDI
     OFF
-    CACHE BOOL "caldi can't be build" FORCE)
+    CACHE BOOL "" FORCE)
 
 set(USE_OPENMP
     ON
-    CACHE BOOL "OPENMP" FORCE)
+    CACHE BOOL "" FORCE)
 
 add_subdirectory(${TORCH_SRC} ${TORCH_BIN})
 
