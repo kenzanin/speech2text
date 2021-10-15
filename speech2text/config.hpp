@@ -15,6 +15,15 @@
 #include "inipp/inipp.h"
 
 namespace CONFIG {
+
+//! @struct WavData
+//! @brief this container supposedly hold all data that required by csv
+struct WavData {
+  std::string fileName{};
+  std::uint8_t status{};
+  std::string comment{};
+  std::string text{};
+};
 class Config : public ERRORCODE::ErrorCode {
  private:
   inipp::Ini<char> ini{};
@@ -36,7 +45,11 @@ class Config : public ERRORCODE::ErrorCode {
   //! @param int error code
   //! @return bool true if exist
   bool IfFileExist(std::string, int);
+
+  //! @brief filter wav file only based on extension .wav == wavExt
   void WavFind();
+
+  //! @brief check if the file exist
   bool Validate();
 
  public:
@@ -55,31 +68,46 @@ class Config : public ERRORCODE::ErrorCode {
   //! decoder.zip
   std::string decoder{};
   //! list of wav in wavLoc
-  std::vector<std::string> wavFiles{};
+  // std::vector<std::string> wavFiles{};
+
+  std::vector<WavData> data{};
 
   void ReadConfig(const std::string);
+  void ReadConfig(Config const &);
 
-  Config &operator=(const Config &t_config) {
-    fileName = t_config.fileName;
-    wavExt = t_config.wavExt;
-    wavLoc = t_config.wavLoc;
-    std::copy(t_config.wavSuffix->begin(), t_config.wavSuffix->end(),
-              wavSuffix);
-    loader = t_config.loader;
-    encoder = t_config.encoder;
-    decoder = t_config.decoder;
-    wavFiles = t_config.wavFiles;
-    return *this;
-  }
-  Config(const Config &t_other) {}
+  // Config &operator=(const Config &t_config) {
+  //   fileName = t_config.fileName;
+  //   wavExt = t_config.wavExt;
+  //   wavLoc = t_config.wavLoc;
+  //   std::copy(t_config.wavSuffix->begin(), t_config.wavSuffix->end(),
+  //             wavSuffix);
+  //   loader = t_config.loader;
+  //   encoder = t_config.encoder;
+  //   decoder = t_config.decoder;
+  //   wavFiles = t_config.wavFiles;
+  //   return *this;
+  // }
+  // Config(Config const &t_other) {}
   Config() {}
 };
 
-inline bool Config::IfFileExist(std::string name, int e) {
+inline void Config::ReadConfig(Config const &t_other) {
+  fileName = t_other.fileName;
+  wavExt = t_other.wavExt;
+  wavLoc = t_other.wavLoc;
+  std::copy(t_other.wavSuffix->begin(), t_other.wavSuffix->end(), wavSuffix);
+  loader = t_other.loader;
+  encoder = t_other.encoder;
+  decoder = t_other.decoder;
+  // wavFiles = t_other.wavFiles;
+  data = t_other.data;
+}
+
+inline bool Config::IfFileExist(std::string t_name, int t_e) {
   try {
-    if (!std::filesystem::exists(name)) throw e;
+    if (!std::filesystem::exists(t_name)) throw t_e;
   } catch (int &e) {
-    std::fprintf(stderr, errorc.at(e), e, name.c_str());
+    std::fprintf(stderr, errorc.at(e), e, t_name.c_str());
     throw;
   }
   return true;
@@ -117,13 +145,16 @@ inline void Config::WavFind() {
       continue;
     }
 
-    wavFiles.push_back(i.path());
+    // wavFiles.push_back(i.path());
     // std::printf("file: %s\n", i.path().c_str());
+
+    WavData tmp_data{.fileName = i.path()};
+    data.push_back(tmp_data);
   }
 }
 
-inline void Config::ReadConfig(const std::string n) {
-  fileName = n;
+inline void Config::ReadConfig(const std::string t_config) {
+  fileName = t_config;
   //! check if file exist
   IfFileExist(fileName, 1000);
 
