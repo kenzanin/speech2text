@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "config.hpp"
 #include "errorc.hpp"
@@ -8,5 +9,5 @@
 
 namespace SPEECH2TEXT {
 CONFIG::Config loadConfigFile(const std::string);
-void WavReaderTranscrip(CONFIG::Config const&);
+std::vector<CONFIG::WavData> WavReaderTranscrip(CONFIG::Config const&);
 }  // namespace SPEECH2TEXT

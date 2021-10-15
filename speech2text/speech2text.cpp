@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <vector>
 
 #include "config.hpp"
 
@@ -13,7 +14,8 @@ CONFIG::Config loadConfigFile(std::string t_config) {
   return config;
 }
 
-void WavReaderTranscrip(CONFIG::Config const &t_config) {
+std::vector<CONFIG::WavData> WavReaderTranscrip(
+    CONFIG::Config const &t_config) {
   WAVREADER::WavReader wav{};
   wav.ReadConfig(t_config);
   wav.ConvertToText();
@@ -21,6 +23,7 @@ void WavReaderTranscrip(CONFIG::Config const &t_config) {
   for (auto &text : wav.result) {
     std::cout << text << "\n";
   }
+  return wav.data;
 }
 
 }  // namespace SPEECH2TEXT
