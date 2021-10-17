@@ -7,15 +7,18 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "ATen/core/ivalue.h"
 #include "errorc.hpp"
 #include "inipp/inipp.h"
+#include "torch/script.h"
 
 namespace CONFIG {
-
+namespace OUTPUT {
 //! @struct WavData
 //! @brief this container supposedly hold all data that required by csv
 struct WavData {
@@ -24,20 +27,31 @@ struct WavData {
   std::string comment{};
   std::string text{};
 };
+}  // namespace OUTPUT
+
+struct pair_hash {
+  template <class T1, class T2>
+  std::size_t operator()(const std::pair<const T1, const T2> &pair) const {
+    return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+  }
+};
+
 class Config : public ERRORCODE::ErrorCode {
  private:
   inipp::Ini<char> ini{};
 
   //! register config ini to variable
-  const std::map<std::pair<std::string, std::string> const, std::string *const>
-      ini_map = {
-          {std::make_pair("location", "source"), &this->wavLoc},
-          {std::make_pair("file", "ext"), &this->wavExt},
-          {std::make_pair("file", "ch1_suffix"), &this->wavSuffix[0]},
-          {std::make_pair("file", "ch2_suffix"), &this->wavSuffix[1]},
-          {std::make_pair("libtorch", "loader"), &this->loader},
-          {std::make_pair("libtorch", "encoder"), &this->encoder},
-          {std::make_pair("libtorch", "decoder"), &this->decoder},
+  const std::unordered_map<
+      const std::pair<const std::string, const std::string>, std::string *const,
+      pair_hash>
+      ini_map{
+          {{"location", "source"}, &this->wavLoc},
+          {{"file", "ext"}, &this->wavExt},
+          {{"file", "ch1_suffix"}, &this->wavSuffix[0]},
+          {{"file", "ch2_suffix"}, &this->wavSuffix[1]},
+          {{"libtorch", "loader"}, &this->loader},
+          {{"libtorch", "encoder"}, &this->encoder},
+          {{"libtorch", "decoder"}, &this->decoder},
       };
 
   //! @brief check if file exist and trow exception when doesn't
@@ -51,6 +65,9 @@ class Config : public ERRORCODE::ErrorCode {
 
   //! @brief check if the file exist
   bool Validate();
+
+  //! @brief load pytorch
+  void LoadTorch();
 
  public:
   //! config file name
@@ -68,9 +85,9 @@ class Config : public ERRORCODE::ErrorCode {
   //! decoder.zip
   std::string decoder{};
   //! list of wav in wavLoc
-  // std::vector<std::string> wavFiles{};
+  std::vector<std::string> wavFiles{};
 
-  std::vector<WavData> data{};
+  // std::vector<OUTPUT::WavData> data{};
 
   void ReadConfig(const std::string);
   void ReadConfig(Config const &);
@@ -99,15 +116,14 @@ inline void Config::ReadConfig(Config const &t_other) {
   loader = t_other.loader;
   encoder = t_other.encoder;
   decoder = t_other.decoder;
-  // wavFiles = t_other.wavFiles;
-  data = t_other.data;
+  wavFiles = t_other.wavFiles;
 }
 
 inline bool Config::IfFileExist(std::string t_name, int t_e) {
   try {
     if (!std::filesystem::exists(t_name)) throw t_e;
   } catch (int &e) {
-    std::fprintf(stderr, errorc.at(e), e, t_name.c_str());
+    std::fprintf(stderr, error_code.at(e), e, t_name.c_str());
     throw;
   }
   return true;
@@ -118,7 +134,7 @@ inline bool Config::Validate() {
   try {
     if (!std::filesystem::is_directory(wavLoc)) throw 1001;
   } catch (int &e) {
-    std::fprintf(stderr, errorc.at(e), e, wavLoc.c_str());
+    std::fprintf(stderr, error_code.at(e), e, wavLoc.c_str());
     throw;
   }
 
@@ -138,18 +154,15 @@ inline void Config::WavFind() {
   for (const auto &i : std::filesystem::directory_iterator(wavLoc)) {
     //! check if file name ended with .wav == wavExt
     std::string tmp = i.path().c_str();
-    int test_string =
+    int check_ext =
         wavExt.compare(std::string(tmp.end() - wavExt.size(), tmp.end()));
     //! if not jump to for
-    if (test_string != 0) {
+    if (check_ext != 0) {
       continue;
     }
 
-    // wavFiles.push_back(i.path());
+    wavFiles.push_back(i.path());
     // std::printf("file: %s\n", i.path().c_str());
-
-    WavData tmp_data{.fileName = i.path()};
-    data.push_back(tmp_data);
   }
 }
 
@@ -165,7 +178,8 @@ inline void Config::ReadConfig(const std::string t_config) {
 
   //! copy value from registered key to variable
   for (auto &e : ini_map) {
-    inipp::get_value(ini.sections[e.first.first], e.first.second, *(e.second));
+    inipp::get_value(ini.sections.at(e.first.first), e.first.second,
+                     *(e.second));
   }
 
   Validate();

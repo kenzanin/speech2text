@@ -16,42 +16,71 @@
 namespace WAVREADER {
 class WavReader : public CONFIG::Config {
  public:
-  std::vector<std::string> result{};
-
-  //  void ReadConfig(CONFIG::Config &);
-  void ConvertToText();
+  std::vector<CONFIG::OUTPUT::WavData> ConvertToText();
+  explicit WavReader(CONFIG::Config const &);
 
  private:
-  // CONFIG::Config config{};
+  torch::jit::script::Module torch_loader{};
+  torch::jit::script::Module torch_encoder{};
+  torch::jit::script::Module torch_decoder{};
+
+  void LoadTorch();
 };
 
-// inline void WavReader::ReadConfig(CONFIG::Config &t_config) {
-//  config.ReadConfig(t_config);
-// }
+inline WavReader::WavReader(CONFIG::Config const &t_config) {
+  ReadConfig(t_config);
+  LoadTorch();
+}
 
-inline void WavReader::ConvertToText() {
-  torch::jit::script::Module torch_loader, torch_encoder, torch_decoder;
+inline void WavReader::LoadTorch() {
   std::cout << "loading module loader from: " << loader << "\n";
   std::cout << "loading module encoder from: " << encoder << "\n";
   std::cout << "loading module decoder from: " << decoder << "\n";
-  torch_loader = torch::jit::load(loader);
-  torch_encoder = torch::jit::load(encoder);
-  torch_decoder = torch::jit::load(decoder);
 
-  for (auto &d : data) {
-    std::cout << "Processing: " << d.fileName << "\n";
-    std::cout << "loading the audio\n";
-    auto waveform = torch_loader.forward({c10::IValue(d.fileName)});
-    std::cout << "Running inference\n";
-    auto emission = torch_encoder.forward({waveform});
-    std::cout << "Generating the transcription\n";
-    auto result = torch_decoder.forward({emission});
-    std::cout << result.toString()->string() << std::endl;
-    std::cout << "Done." << std::endl;
-
-    this->result.push_back(result.toString()->string());
-    d.text = result.toString()->string();
+  try {
+    torch_loader = torch::jit::load(loader);
+  } catch (const c10::Error &error) {
+    std::cerr << error.what();
+    std::fprintf(stderr, error_code.at(1002), 1002, loader.c_str());
+    throw 1002;
   }
+
+  try {
+    torch_encoder = torch::jit::load(encoder);
+  } catch (const c10::Error &error) {
+    std::cerr << error.what();
+    std::fprintf(stderr, error_code.at(1002), 1002, loader.c_str());
+    throw 1002;
+  }
+
+  try {
+    torch_decoder = torch::jit::load(decoder);
+  } catch (const c10::Error &error) {
+    std::cerr << error.what();
+    std::fprintf(stderr, error_code.at(1002), 1002, loader.c_str());
+    throw 1002;
+  }
+}
+
+inline std::vector<CONFIG::OUTPUT::WavData> WavReader::ConvertToText() {
+  std::vector<CONFIG::OUTPUT::WavData> data{};
+
+  for (auto &d : wavFiles) {
+    //! std::cout << "Processing: " << d << "\n";
+    //! std::cout << "loading the audio\n";
+    auto waveform = torch_loader.forward({c10::IValue(d)});
+    //! std::cout << "Running inference\n";
+    auto emission = torch_encoder.forward({waveform});
+    //! std::cout << "Generating the transcription\n";
+    auto result = torch_decoder.forward({emission});
+    //! std::cout << result.toString()->string() << std::endl;
+    //! std::cout << "Done." << std::endl;
+
+    CONFIG::OUTPUT::WavData tmp{.fileName = d,
+                                .text = result.toString()->string()};
+    data.push_back(tmp);
+  }
+  return data;
 }
 
 }  // namespace WAVREADER

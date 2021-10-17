@@ -10,6 +10,10 @@ int main() {
   auto config_ini = SPEECH2TEXT::loadConfigFile("config.ini");
   auto data = SPEECH2TEXT::WavReaderTranscrip(config_ini);
 
+  for (auto &e : data) {
+    std::cout << e.fileName << "\n" << e.text << "\n";
+  }
+
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration =
       std::chrono::duration_cast<std::chrono::microseconds>(stop - start);

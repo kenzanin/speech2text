@@ -14,16 +14,10 @@ CONFIG::Config loadConfigFile(std::string t_config) {
   return config;
 }
 
-std::vector<CONFIG::WavData> WavReaderTranscrip(
+std::vector<CONFIG::OUTPUT::WavData> WavReaderTranscrip(
     CONFIG::Config const &t_config) {
-  WAVREADER::WavReader wav{};
-  wav.ReadConfig(t_config);
-  wav.ConvertToText();
-
-  for (auto &text : wav.result) {
-    std::cout << text << "\n";
-  }
-  return wav.data;
+  WAVREADER::WavReader wav(t_config);
+  auto data = wav.ConvertToText();
+  return data;
 }
-
 }  // namespace SPEECH2TEXT

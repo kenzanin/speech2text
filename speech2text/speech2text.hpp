@@ -9,5 +9,5 @@
 
 namespace SPEECH2TEXT {
 CONFIG::Config loadConfigFile(const std::string);
-std::vector<CONFIG::WavData> WavReaderTranscrip(CONFIG::Config const&);
+std::vector<CONFIG::OUTPUT::WavData> WavReaderTranscrip(CONFIG::Config const&);
 }  // namespace SPEECH2TEXT
