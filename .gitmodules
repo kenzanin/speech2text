@@ -4,3 +4,6 @@
 [submodule "speech2text/audio"]
 	path = speech2text/audio
 	url = https://github.com/pytorch/audio
+[submodule "speech2text/rapidcsv"]
+	path = speech2text/rapidcsv
+	url = https://github.com/d99kris/rapidcsv
