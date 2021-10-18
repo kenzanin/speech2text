@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "config.hpp"
-#include "errorc.hpp"
 #include "torch/script.h"
 
 namespace WAVREADER {
@@ -27,8 +26,9 @@ class WavReader : public CONFIG::Config {
   void LoadTorch();
 };
 
-inline WavReader::WavReader(CONFIG::Config const &t_config) {
-  ReadConfig(t_config);
+inline WavReader::WavReader(CONFIG::Config const &t_config)
+    : CONFIG::Config(t_config) {
+  // CONFIG::Config(t_config);
   LoadTorch();
 }
 

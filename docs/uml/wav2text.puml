@@ -1,0 +1,57 @@
+@startuml wav2text class
+!theme materia
+
+    class config{
+        .. public ..
+        + readConfig(std::string)
+        + readConfig(config&)
+        .. std::string ..
+        + filename
+        + wavLocation
+        + ch1Suffix
+        + ch2Suffix
+        + wavExtension
+        + wavFiles
+        + loader
+        + encoder
+        + decoder
+        .. private ..
+        - validate()
+        - wavFind()
+    }
+
+    note right of config::readConfig(std::string)
+        read form config.ini file
+        and copy all value to class member
+    end note
+
+    note right of config::validate()
+        validate all config to actual path or name.
+        throw exception when it fail
+
+    end note
+
+    note right of config::wavFind()
+        find all wav file in the location set in config.ini
+        and save to wavFiles
+    end note
+
+
+    class error_code{
+        .. public ..
+        + error_code
+    }
+
+    error_code - config : public inherite
+
+    class wavReader {
+        + ConvertToText()
+        - LoadTorch()
+        - torch_loader
+        - torch_encoder
+        - torch_decoder
+    }
+
+    config -- wavReader : public inherite
+
+@enduml

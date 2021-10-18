@@ -1,11 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "ATen/core/ivalue.h"
-#include "errorc.hpp"
+#include "error_code.hpp"
 #include "inipp/inipp.h"
 #include "torch/script.h"
 
@@ -66,9 +66,6 @@ class Config : public ERRORCODE::ErrorCode {
   //! @brief check if the file exist
   bool Validate();
 
-  //! @brief load pytorch
-  void LoadTorch();
-
  public:
   //! config file name
   std::string fileName{};
@@ -103,8 +100,40 @@ class Config : public ERRORCODE::ErrorCode {
   //   return *this;
   // }
   // Config(Config const &t_other) {}
-  Config() {}
+  explicit Config(const std::string);
+  Config(Config const &);
 };
+
+inline Config::Config(Config const &t_other) {
+  fileName = t_other.fileName;
+  wavExt = t_other.wavExt;
+  wavLoc = t_other.wavLoc;
+  std::copy(t_other.wavSuffix->begin(), t_other.wavSuffix->end(), wavSuffix);
+  loader = t_other.loader;
+  encoder = t_other.encoder;
+  decoder = t_other.decoder;
+  wavFiles = t_other.wavFiles;
+}
+
+inline Config::Config(const std::string t_config) {
+  fileName = t_config;
+  //! check if file exist
+  IfFileExist(fileName, 1000);
+
+  //! parse ini config file
+  std::ifstream is(fileName);
+  ini.parse(is);
+  ini.strip_trailing_comments();
+
+  //! copy value from registered key to variable
+  for (auto &e : ini_map) {
+    inipp::get_value(ini.sections.at(e.first.first), e.first.second,
+                     *(e.second));
+  }
+
+  Validate();
+  WavFind();
+}
 
 inline void Config::ReadConfig(Config const &t_other) {
   fileName = t_other.fileName;

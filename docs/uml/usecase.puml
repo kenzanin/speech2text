@@ -1,0 +1,33 @@
+@startuml Use Case
+!theme materia
+(start) --> user
+rectangle wav2text{
+    user -> (config)
+    note right of (config)
+        config.ini
+        setting wav location wav path
+        setting wav extension (usualy .wav)
+        this is needed because sox in libtorch
+        can accept multi format audio like mp3 flac etc.
+    end note
+    (config) --> (wavReader)
+    note right of (wavReader)
+        all wav file found in the config setup and
+        feed it to libtorch, transcribe and store
+        - wav filename
+        - status flags
+        - comment from status flags
+        - text output
+        in the variable
+    end note
+    (wavReader) --> (csv)
+    note right of (csv)
+        store the information about file name,
+        - status flag(fail, success, etc)
+        - text output
+    end note
+
+    (csv) --> (end)
+}
+
+@enduml

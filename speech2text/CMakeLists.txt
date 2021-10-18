@@ -4,6 +4,8 @@ project(speech2text LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_CPPCHECK "cppcheck")
 set(CMAKE_CXX_CPPLINT "cpplint")
 set(TORCH_SRC audio)
@@ -12,8 +14,8 @@ set(TORCH_BIN libtorchaudio)
 add_subdirectory(inipp)
 include_directories(inipp)
 
-add_library(speech2text speech2text.cpp speech2text.hpp config.hpp errorc.hpp
-                        wavreader.hpp)
+add_library(speech2text speech2text.cpp speech2text.hpp config.hpp
+                        error_code.hpp wavreader.hpp)
 
 find_package(Torch REQUIRED)
 message("libtorchaudio CMakeLists: ${TORCH_CXX_FLAGS}")
