@@ -42,7 +42,7 @@
         + error_code
     }
 
-    error_code - config : public inherite
+    error_code - config : public inheritance
 
     class wavReader {
         + ConvertToText()
@@ -52,6 +52,6 @@
         - torch_decoder
     }
 
-    config -- wavReader : public inherite
+    config -- wavReader : public inheritance
 
 @enduml
