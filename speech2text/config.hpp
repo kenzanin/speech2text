@@ -87,8 +87,6 @@ class Config : public ERRORCODE::ErrorCode {
   //! list of wav in wavLoc
   std::vector<std::string> wavFiles{};
 
-  // std::vector<OUTPUT::WavData> data{};
-
   void ReadConfig(const std::string);
   void ReadConfig(Config const &);
 
